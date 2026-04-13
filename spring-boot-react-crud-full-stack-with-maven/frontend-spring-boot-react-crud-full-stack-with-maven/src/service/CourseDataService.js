@@ -6,28 +6,27 @@ const INSTRUCTOR_API_URL = `${COURSE_API_URL}/instructors/${INSTRUCTOR}`
 
 class CourseDataService {
 
-    retrieveAllCourses(name) {
-        //console.log('executed service')
-        return axios.get(`${INSTRUCTOR_API_URL}/courses`);
+    retrieveAllCourses(name, page = 0, size = 10, sort = null) {
+        let url = `${INSTRUCTOR_API_URL}/courses?page=${page}&size=${size}`
+        if (sort) {
+            url += `&sort=${sort}`
+        }
+        return axios.get(url);
     }
 
     retrieveCourse(name, id) {
-        //console.log('executed service')
         return axios.get(`${INSTRUCTOR_API_URL}/courses/${id}`);
     }
 
     deleteCourse(name, id) {
-        //console.log('executed service')
         return axios.delete(`${INSTRUCTOR_API_URL}/courses/${id}`);
     }
 
     updateCourse(name, id, course) {
-        //console.log('executed service')
         return axios.put(`${INSTRUCTOR_API_URL}/courses/${id}`, course);
     }
 
     createCourse(name, course) {
-        //console.log('executed service')
         return axios.post(`${INSTRUCTOR_API_URL}/courses/`, course);
     }
 }

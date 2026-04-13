@@ -1,12 +1,15 @@
 package com.in28minutes.fullstack.springboot.maven.crud.springbootcrudfullstackwithmaven.course;
 
 import java.net.URI;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,7 +19,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-@CrossOrigin(origins = { "http://localhost:3000", "http://localhost:4200" })
+import com.in28minutes.fullstack.springboot.maven.crud.springbootcrudfullstackwithmaven.config.AppConfig;
+import com.in28minutes.fullstack.springboot.maven.crud.springbootcrudfullstackwithmaven.exception.InvalidSortFieldException;
+
 @RestController
 public class CourseResource {
 
@@ -24,8 +29,25 @@ public class CourseResource {
 	private CoursesHardcodedService courseManagementService;
 
 	@GetMapping("/instructors/{username}/courses")
-	public List<Course> getAllCourses(@PathVariable String username) {
-		return courseManagementService.findAll();
+	public Map<String, Object> getAllCourses(
+			@PathVariable String username,
+			@PageableDefault(size = 10) Pageable pageable) {
+		
+		try {
+			AppConfig.validateSortFields(pageable.getSort());
+		} catch (IllegalArgumentException e) {
+			throw new InvalidSortFieldException(e.getMessage());
+		}
+		
+		Page<Course> page = courseManagementService.findAll(pageable);
+		
+		Map<String, Object> response = new HashMap<>();
+		response.put("content", page.getContent());
+		response.put("totalElements", page.getTotalElements());
+		response.put("totalPages", page.getTotalPages());
+		response.put("number", page.getNumber());
+		
+		return response;
 	}
 
 	@GetMapping("/instructors/{username}/courses/{id}")
@@ -59,9 +81,6 @@ public class CourseResource {
 
 		Course createdCourse = courseManagementService.save(course);
 
-		// Location
-		// Get current resource url
-		/// {id}
 		URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(createdCourse.getId())
 				.toUri();
 
